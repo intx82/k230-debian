@@ -40,6 +40,7 @@ The main differences are:
   * No external downloads (except for git submodules).
   * No RTOS.
   * No Buildroot/Busybox root file system (pick your own!).
+  * No executable binaries without sources.
 
 In the near future, we also hope to add support for U-boot standard boot,
 a.k.a. "*distro boot*".
