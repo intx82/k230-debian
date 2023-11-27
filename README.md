@@ -17,9 +17,9 @@ It boots a Linux kernel with support for the RISC-V Vector extension
 on the *big* core and with all the RAM.
 
 This repository also dispenses with building the RTOS
-and the Linux `buildroot`. The intent is to let *you* install *your* favorite
+and the Busybox build root. The intent is to let *you* install *your* favorite
 Linux RISC-V distribution on the root filesystem, while this repository only
-provides:
+builds and makes a tiny flashable image with:
 * The two stages of boot loader: U-boot SPL and U-boot,
 * OpenSBI, and
 * the Linux kernel.
@@ -32,13 +32,12 @@ The main differences are:
   * Support for the RISC-V Vector extension for Linux user-space.
   * Full system 512 MiB of RAM available.
   * Only 16 MiB of storage reserved for boot loader and kernel images.
-  * Support for U-boot "distro boot" (in addition to vendor boot protocol).
 * At build time:
   * Support for non-x86-64 (incl. native RISC-V) host.
   * Support for parallel builds (vendor requires `make -j1`).
   * Support for upstream GCC cross-compilation toolchain.
   * Compatibility with up-to-date host glibc.
-  * No external downloads.
+  * No external downloads (except for git submodules).
   * No RTOS.
   * No Buildroot/Busybox root file system (pick your own!).
 
