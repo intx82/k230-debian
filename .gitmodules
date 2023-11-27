@@ -1,0 +1,12 @@
+[submodule "src/opensbi"]
+	path = src/opensbi
+	url = https://code.videolan.org/Courmisch/opensbi.git
+	branch = k230
+[submodule "src/u-boot"]
+	path = src/u-boot
+	url = https://code.videolan.org/Courmisch/u-boot.git
+	branch = k230
+[submodule "src/linux"]
+	path = src/linux
+	url = https://code.videolan.org/Courmisch/linux.git
+	branch = k230

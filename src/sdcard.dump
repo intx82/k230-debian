@@ -1,0 +1,13 @@
+label: gpt
+label-id: EB02EF2E-CC32-443B-8E23-6DED5D2DF32F
+device: output/images/sysimage-sdcard.img
+unit: sectors
+first-lba: 2048
+sector-size: 512
+
+p1 : start=        2048, size=        1024, type=5B193300-FC78-40CD-8002-E86C45580B47, name="uboot_spl_1", attrs="RequiredPartition"
+p2 : start=        3072, size=         768, type=5B193300-FC78-40CD-8002-E86C45580B47, name="uboot_spl_2", attrs="RequiredPartition"
+p3 : start=        3840, size=         256, type=8DA63339-0007-60C0-C436-083AC8230908, name="uboot_env"
+p4 : start=        4096, size=        4096, type=2E54B353-1271-4842-806F-E436D6AF6985, name="uboot"
+p5 : start=        8192, size=       24576, type=8DA63339-0007-60C0-C436-083AC8230908, name="linux"
+p6 : start=       32768,                    type=72EC70A6-CF74-40E6-BD49-4BDA08E8F224, name="rootfs"
