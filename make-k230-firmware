@@ -1,3 +1,4 @@
+#! /usr/bin/python3
 # -*- coding: utf-8 -*-
 import os
 import getopt
@@ -11,44 +12,25 @@ if __name__ == "__main__":
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hi:o:asn', ['ifile=', 'ofile='])
     except getopt.GetoptError:
-        print('rsa+noaes.py -i <inputfile> -o <outputfile>')
+        print('make-k230-firmware -i <inputfile> -o <outputfile>')
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print('rsa+noaes.py -i <inputfile> -o <outputfile>')
+            print('make-k230-firmware -i <inputfile> -o <outputfile>')
             sys.exit()
         elif opt in ('-i', '--ifile'):
             inputfile = arg
         elif opt in ('-o', '--ofile'):
             outputfile = arg
-    # 在firmware中添加版本号version
-    with open(inputfile, 'rb+') as f:
-        origin_content = f.read()
-        f.seek(0, 0)
-        # write version
-        version = b'\x00\x00\x00\x00'
-        f.write(version + origin_content)
-        f.close()
 
     input = open(inputfile, 'rb')
     patch_otp = open(outputfile, 'wb')
-    input_data = input.read()
-    """
-    # file length
-    file_len = len(input_data)
-    data_len = file_len
-    """
+    input_data = b'\x00\x00\x00\x00' + input.read()
     # construct file header
     # write Magic
     magic = b'\x4b\x32\x33\x30'
     print('the magic is: ', magic)
     patch_otp.write(magic)
-    """
-    # write length
-    length = struct.pack('I', data_len)
-    print('the length of firmware: ', data_len)
-    patch_otp.write(length)
-    """
     # 全局变量
     message = input_data
     # 判断生成哪种形式的固件头
