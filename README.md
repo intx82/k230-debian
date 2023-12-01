@@ -32,6 +32,7 @@ The main differences are:
   * Support for the RISC-V Vector extension for Linux user-space.
   * Full system 512 MiB of RAM available.
   * Only 16 MiB of storage reserved for boot loader and kernel images.
+  * Backported bug fixes for the onboard Ethernet adapter (RealTek 8152).
 * At build time:
   * Support for non-x86-64 (incl. native RISC-V) host.
   * Support for parallel builds (vendor requires `make -j1`).
