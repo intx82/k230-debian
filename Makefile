@@ -85,12 +85,12 @@ $(BUILD_DIR)/fn_%: $(BUILD_DIR)/%
 
 sysimage-sdcard.img: \
 		$(BUILD_DIR)/fn_u-boot-spl.bin \
-		$(BUILD_DIR)/fn_ug_u-boot.bin \
-		$(BUILD_DIR)/fn_ulinux.bin $(BUILD_DIR)/rootfs.ext4
+		$(BUILD_DIR)/ug_u-boot.bin \
+		$(BUILD_DIR)/ulinux.bin $(BUILD_DIR)/rootfs.ext4
 	dd bs=1K seek=1024 of=$@.tmp if=$(BUILD_DIR)/fn_u-boot-spl.bin
 	dd bs=1K seek=1536 of=$@.tmp if=$(BUILD_DIR)/fn_u-boot-spl.bin
-	dd bs=1K seek=2048 of=$@.tmp if=$(BUILD_DIR)/fn_ug_u-boot.bin
-	dd bs=1K seek=4096 of=$@.tmp if=$(BUILD_DIR)/fn_ulinux.bin
+	dd bs=1K seek=2048 of=$@.tmp if=$(BUILD_DIR)/ug_u-boot.bin
+	dd bs=1K seek=4096 of=$@.tmp if=$(BUILD_DIR)/ulinux.bin
 	dd bs=1K seek=16384 of=$@.tmp if=$(BUILD_DIR)/rootfs.ext4
 	truncate --size=+1M "$@.tmp" # GPT copy
 	/sbin/sfdisk "$@.tmp" < src/sdcard.dump
