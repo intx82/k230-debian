@@ -1,4 +1,3 @@
-SHELL=/bin/bash
 CROSS_COMPILE = riscv64-linux-gnu-
 
 export K230_SDK_ROOT := $(shell pwd)
