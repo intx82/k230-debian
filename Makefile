@@ -81,7 +81,7 @@ $(ROOTFS): Makefile
 	/sbin/mkfs.ext4 -r 1 -N 0 -m 1 -L rootfs "$@" 1M
 
 $(BUILD_DIR)/fn_%: $(BUILD_DIR)/%
-	python3 tools/firmware_gen.py -i "$<" -o "$@" -n
+	python3 tools/firmware_gen.py -i "$<" -o "$@"
 
 sysimage-sdcard.img: \
 		$(BUILD_DIR)/fn_u-boot-spl.bin \

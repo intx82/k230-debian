@@ -132,7 +132,7 @@ To rebuild the system image yourself:
 * Install the GCC cross-compiler for Linux 64-bit RISC-V:
   `riscv64-linux-gnu-gcc`.
 * Install GNU/make, `xxd`, `gawk`, `sfdisk` (list may not be exhaustive).
-* Install Python3 and the Cryptodome module.
+* Install Python3.
 * Run `make`.
 
 TODO: better documentation, maybe in a separate wiki page.
