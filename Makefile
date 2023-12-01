@@ -1,81 +1,97 @@
-CROSS_COMPILE = riscv64-linux-gnu-
-
-export K230_SDK_ROOT := $(shell pwd)
-export BUILD_DIR := $(K230_SDK_ROOT)/output
-
-OPENSBI_SRC_PATH         = src/opensbi
-LINUX_SRC_PATH           = src/linux
-UBOOT_SRC_PATH           = src/u-boot
+CROSS_COMPILE ?= riscv64-linux-gnu-
+BOARD ?= k230_canmv
+BUILD_DIR ?= output
 
 CONFIG_DBGLV ?=0
 export KCFLAGS=-DDBGLV=$(CONFIG_DBGLV)
 
-export OPENSBI_BUILD_DIR	:= $(BUILD_DIR)/opensbi
-export LINUX_BUILD_DIR		:= $(BUILD_DIR)/linux
-export UBOOT_BUILD_DIR		:= $(BUILD_DIR)/u-boot
-export IMAGE_DIR		:= $(BUILD_DIR)/images
+all: sysimage-sdcard.img
 
-LINUX_KERNEL_DEFCONFIG	= k230_canmv_defconfig
-UBOOT_DEFCONFIG		= k230_canmv_defconfig
-LINUX_CONFIG = $(LINUX_BUILD_DIR)/.config
-LINUX_IMAGE = $(LINUX_BUILD_DIR)/arch/riscv/boot/Image
-FW_PAYLOAD = $(OPENSBI_BUILD_DIR)/platform/generic/firmware/fw_payload.bin
+u-boot: FORCE
+	+$(MAKE) -C src/u-boot O=../../$(BUILD_DIR)/u-boot \
+		ARCH=riscv CROSS_COMPILE="$(CROSS_COMPILE)" \
+		$(BOARD)_defconfig
+	+$(MAKE) -C src/u-boot O=../../$(BUILD_DIR)/u-boot \
+		ARCH=riscv CROSS_COMPILE="$(CROSS_COMPILE)"
 
-export UBOOT_DEFCONFIG
+opensbi: linux
+	mkdir -p -- "$(BUILD_DIR)/opensbi"
+	+$(MAKE) -C src/opensbi O="$(shell pwd)/$(BUILD_DIR)/opensbi" \
+		CROSS_COMPILE=$(CROSS_COMPILE) \
+		PLATFORM=generic \
+		FW_PAYLOAD_PATH="$(shell pwd)/$(BUILD_DIR)/linux/arch/riscv/boot/Image"
 
-.PHONY: all
-all .DEFAULT: $(IMAGE_DIR)/sysimage-sdcard.img
-
-$(LINUX_CONFIG): Makefile
-	+$(MAKE) -C "$(LINUX_SRC_PATH)" O=$(LINUX_BUILD_DIR) \
+linux: FORCE
+	+$(MAKE) -C src/linux O=../../$(BUILD_DIR)/linux \
 		CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv \
-		$(LINUX_KERNEL_DEFCONFIG)
-
-$(LINUX_IMAGE): $(LINUX_CONFIG)
-	+$(MAKE) -C "$(LINUX_SRC_PATH)" O=$(LINUX_BUILD_DIR) \
+		$(BOARD)_defconfig
+	+$(MAKE) -C src/linux O=../../$(BUILD_DIR)/linux \
 		CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv
-
-$(IMAGE_DIR)/Image: $(LINUX_IMAGE)
-	mkdir -p -- "$(IMAGE_DIR)"
-	cp -f -- "$<" "$@"
 
 #make ARCH=riscv O=$(LINUX_BUILD_DIR) modules_install INSTALL_MOD_PATH=$(LINUX_BUILD_DIR)/rootfs/ CROSS_COMPILE=$(CROSS_COMPILE)
 
-$(FW_PAYLOAD): $(LINUX_IMAGE)
-	mkdir -p -- "$(OPENSBI_BUILD_DIR)"
-	+$(MAKE) -C "$(OPENSBI_SRC_PATH)" O=$(OPENSBI_BUILD_DIR) \
-		CROSS_COMPILE=$(CROSS_COMPILE) \
-		PLATFORM=generic FW_PAYLOAD_PATH=$<
+.PHONY: FORCE
 
-$(IMAGE_DIR)/fw_payload.bin: $(FW_PAYLOAD)
-	mkdir -p -- "$(IMAGE_DIR)"
+FW_PAYLOAD = $(BUILD_DIR)/opensbi/platform/generic/firmware/fw_payload.bin
+DTB = $(BUILD_DIR)/$(BOARD).dtb
+INITRD = $(BUILD_DIR)/initrd.img
+ROOTFS = $(BUILD_DIR)/rootfs.ext4
+
+$(BUILD_DIR)/u-boot/spl/u-boot-spl.bin: u-boot
+$(BUILD_DIR)/u-boot/u-boot.bin: u-boot
+$(FW_PAYLOAD): opensbi
+
+$(BUILD_DIR)/u-boot-spl.bin: $(BUILD_DIR)/u-boot/spl/u-boot-spl.bin
 	cp -f -- "$<" "$@"
 
-.PHONY: uboot
-uboot:
-	$(MAKE) -C "$(UBOOT_SRC_PATH)" O=$(UBOOT_BUILD_DIR) \
-		ARCH=riscv CROSS_COMPILE="$(CROSS_COMPILE)" \
-		$(UBOOT_DEFCONFIG)
-	$(MAKE) -C "$(UBOOT_SRC_PATH)" O=$(UBOOT_BUILD_DIR) \
-		ARCH=riscv CROSS_COMPILE="$(CROSS_COMPILE)"
+$(BUILD_DIR)/u-boot.bin: $(BUILD_DIR)/u-boot/u-boot.bin
+	cp -f -- "$<" "$@"
 
-$(IMAGE_DIR)/rootfs.ext4:
-	mkdir -p -- "$(BUILD_DIR)/images"
+%.gz: %
+	gzip -fkn9 "$<"
+
+$(BUILD_DIR)/$(BOARD).dts.txt: linux
+	mkdir -p -- "$(BUILD_DIR)"
+	$(CPP) -nostdinc -I src/linux/include -I src/linux/arch \
+		-undef -x assembler-with-cpp \
+		src/linux/arch/riscv/boot/dts/kendryte/$(BOARD).dts \
+		-o $@
+
+%.dtb: %.dts.txt linux
+	$(BUILD_DIR)/linux/scripts/dtc/dtc -I dts -q -O dtb "$<" -o "$@"
+
+$(INITRD): Makefile
+	mkdir -p -- "$(BUILD_DIR)"
+	truncate --size=1 $@
+
+$(BUILD_DIR)/ug_u-boot.bin: $(BUILD_DIR)/u-boot/u-boot.bin.gz
+	$(BUILD_DIR)/u-boot/tools/mkimage -A riscv -C gzip \
+		-O u-boot -T firmware  -a 0 -e 0 -n uboot \
+		-d "$<" $@
+
+$(BUILD_DIR)/ulinux.bin: u-boot $(FW_PAYLOAD).gz $(INITRD) $(DTB)
+	$(BUILD_DIR)/u-boot/tools/mkimage -A riscv -O linux -T multi -C gzip \
+		-a 0 -e 0 -n linux \
+		-d $(FW_PAYLOAD).gz:$(INITRD):$(DTB) $@
+
+$(ROOTFS): Makefile
+	mkdir -p -- "$(BUILD_DIR)"
 	rm -f -- "$@"
 	# -d rootfs
 	/sbin/mkfs.ext4 -r 1 -N 0 -m 1 -L rootfs "$@" 1M
 
-$(IMAGE_DIR)/sysimage-sdcard.img: Makefile src/sdcard.dump \
-		$(IMAGE_DIR)/rootfs.ext4 \
-		$(IMAGE_DIR)/Image \
-		$(IMAGE_DIR)/fw_payload.bin \
-		uboot
-	tools/gen_image.sh
-	dd bs=1K seek=1024 of=$@.tmp if=$(IMAGE_DIR)/uboot/fn_u-boot-spl.bin
-	dd bs=1K seek=1536 of=$@.tmp if=$(IMAGE_DIR)/uboot/fn_u-boot-spl.bin
-	dd bs=1K seek=2048 of=$@.tmp if=$(IMAGE_DIR)/uboot/fn_ug_u-boot.bin
-	dd bs=1K seek=4096 of=$@.tmp if=$(IMAGE_DIR)/linux_system.bin
-	dd bs=1K seek=16384 of=$@.tmp if=$(IMAGE_DIR)/rootfs.ext4
+$(BUILD_DIR)/fn_%: $(BUILD_DIR)/%
+	python3 tools/firmware_gen.py -i "$<" -o "$@" -n
+
+sysimage-sdcard.img: \
+		$(BUILD_DIR)/fn_u-boot-spl.bin \
+		$(BUILD_DIR)/fn_ug_u-boot.bin \
+		$(BUILD_DIR)/fn_ulinux.bin $(BUILD_DIR)/rootfs.ext4
+	dd bs=1K seek=1024 of=$@.tmp if=$(BUILD_DIR)/fn_u-boot-spl.bin
+	dd bs=1K seek=1536 of=$@.tmp if=$(BUILD_DIR)/fn_u-boot-spl.bin
+	dd bs=1K seek=2048 of=$@.tmp if=$(BUILD_DIR)/fn_ug_u-boot.bin
+	dd bs=1K seek=4096 of=$@.tmp if=$(BUILD_DIR)/fn_ulinux.bin
+	dd bs=1K seek=16384 of=$@.tmp if=$(BUILD_DIR)/rootfs.ext4
 	truncate --size=+1M "$@.tmp" # GPT copy
 	/sbin/sfdisk "$@.tmp" < src/sdcard.dump
 	mv -- "$@.tmp" "$@"
