@@ -83,11 +83,11 @@ sync
 * Open the SD card device node in a GPT partitioning tool such as `parted`:
   * Fix the Master Boot Record when asked (this is necessary because the
     system image should have been smaller than the SD card capacity).
-  * Resize the "`rootfs`" (number 6) root partition.
+  * Resize the "`rootfs`" (number 5) root partition.
   * Save and exit.
 * Resize the `ext4` file system of the root partition, e.g.:
 ```
-resize2fs /dev/sdz6
+resize2fs /dev/sdz5
 ```
 * Format new partition as `ext4`.
 * Mount the root partition.
