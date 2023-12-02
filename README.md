@@ -31,7 +31,8 @@ The main differences are:
   * Running Linux on the "big" core.
   * Support for the RISC-V Vector extension for Linux user-space.
   * Full system 512 MiB of RAM available.
-  * Only 16 MiB of storage reserved for boot loader and kernel images.
+  * Only 4 MiB of storage reserved for boot loader.
+  * Kernel image in /boot with U-boot syslinux-style distro boot support.
   * Backported bug fixes for the onboard Ethernet adapter (RealTek 8152).
 * At build time:
   * Support for non-x86-64 (incl. native RISC-V) host.
@@ -42,9 +43,6 @@ The main differences are:
   * No RTOS.
   * No Buildroot/Busybox root file system (pick your own!).
   * No executable binaries without sources.
-
-In the near future, we also hope to add support for U-boot standard boot,
-a.k.a. "*distro boot*".
 
 # Disclaimer
 
@@ -105,7 +103,7 @@ resize2fs /dev/sdz6
 
 # Troubleshooting
 
-The board has a built-in serial port available through the USB CDC ASM protocol
+The board has a built-in serial port available through the USB CDC ACM protocol
 on the power USB-C port.
 
 To troubleshoot, connect the board with the provided USB cable to a free port
@@ -114,11 +112,14 @@ on a Linux desktop, and attach to the serial port, e.g.:
 # cu -l ttyACM0
 ```
 
-## No network
+## U-boot enviroment CRC errors
 
-There is a known issue (probably a vendor kernel bug) whereby the RealTek 8152
-USB-Ethernet network interface does not always whilst the Linux kernel boots.
-If this happens, try **cold resetting** the board.
+By default, the partition (number 3) to store the U-boot environment is empty,
+and therefore invalid as far as U-boot is concerned. This is deliberate: we
+want U-boot to use its default settings.
+
+The error is essentially harmless. But if you want to avoid it anyway,
+just save the current environment from the U-boot command line prompt.
 
 ## Kernel panic due to no init
 
