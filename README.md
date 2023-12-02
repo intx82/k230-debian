@@ -130,10 +130,14 @@ Please recheck the installation documentation.
 
 To rebuild the system image yourself:
 
-* Clone this repository.
-* Install the GCC cross-compiler for Linux 64-bit RISC-V:
+* Install the GCC cross-compiler for Linux 64-bit RISC-V,
   `riscv64-linux-gnu-gcc`.
 * Install GNU/make, `xxd`, `gawk`, `sfdisk`, `fakeroot` and Python 3.
+* Clone this repository:
+```
+git clone --recurse-submodules \
+	https://code.videolan.org/Courmisch/k230-boot.git
+```
 * Run `make`.
 
 TODO: better documentation, maybe in a separate wiki page.
