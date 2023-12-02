@@ -1,9 +1,24 @@
 #! /usr/bin/python3
 # -*- coding: utf-8 -*-
+#
+# This script wraps a file into the Canaan K230 firmware image format.
+# This is necessary at least for SPL which is loaded by the boot ROM.
+#
+# The format consists of a proprietary 532-byte firmware header followed by the
+# raw image payload (possibly encrypted). The header is laid out like this:
+# * 4-byte "K230" magic number,
+# * 4-byte length in byte of the payload plus four (native endian),
+# * 4-byte encryption type enumeration, always 0 for unencrypted format,
+# * Then in the case of the unencrypted format:
+#   32-byte SHA-256 hash of the four zero bytes then the payload,
+# * 484 bytes of zero padding (reserved for encrypted formats).
+# The length field and hash calculation starts count this point:
+# * 4-byte version number: currently always 0,
+# * the raw image payload.
+
 import os
 import getopt
 import sys
-# hash需要调用的库
 import hashlib
 
 if __name__ == "__main__":
@@ -26,31 +41,18 @@ if __name__ == "__main__":
     input = open(inputfile, 'rb')
     patch_otp = open(outputfile, 'wb')
     input_data = b'\x00\x00\x00\x00' + input.read()
-    # construct file header
-    # write Magic
     magic = b'\x4b\x32\x33\x30'
-    print('the magic is: ', magic)
     patch_otp.write(magic)
-    # 全局变量
     message = input_data
-    # 判断生成哪种形式的固件头
-    # 写长度: （version+固件明文）
     data_len = len(input_data)
-    data_len_byte = data_len.to_bytes(4, byteorder=sys.byteorder, signed=True)  # int convert 4 bytes
+    data_len_byte = data_len.to_bytes(4, byteorder=sys.byteorder, signed=True)
     patch_otp.write(data_len_byte)
-    # write encryption type
     encrypto_type = 0
-    encrypto_type_b = encrypto_type.to_bytes(4, byteorder=sys.byteorder, signed=True)  # int convert bytes
+    encrypto_type_b = encrypto_type.to_bytes(4, byteorder=sys.byteorder, signed=True)
     patch_otp.write(encrypto_type_b)
-    # 对明文做hash256
     hash_data = hashlib.sha256(message).digest()
-    # 写hash头
     patch_otp.write(hash_data)
-    # 保留（516-32）字节
-    reverse_value = bytes(516-32)
-    patch_otp.write(reverse_value)
-
-    # write firmware
+    patch_otp.write(bytes(484))
     patch_otp.write(message)
     patch_otp.close()
     input.close()
