@@ -1,5 +1,6 @@
 CROSS_COMPILE ?= riscv64-linux-gnu-
-BOARD ?= k230_canmv
+SOC = k230
+BOARD ?= canmv
 BUILD_DIR ?= output
 
 CONFIG_DBGLV ?=0
@@ -10,7 +11,7 @@ all: sysimage-sdcard.img
 u-boot: FORCE
 	+$(MAKE) -C src/u-boot O=../../$(BUILD_DIR)/u-boot \
 		ARCH=riscv CROSS_COMPILE="$(CROSS_COMPILE)" \
-		$(BOARD)_defconfig
+		$(SOC)_$(BOARD)_defconfig
 	+$(MAKE) -C src/u-boot O=../../$(BUILD_DIR)/u-boot \
 		ARCH=riscv CROSS_COMPILE="$(CROSS_COMPILE)"
 
@@ -24,7 +25,7 @@ opensbi: linux
 linux: FORCE
 	+$(MAKE) -C src/linux O=../../$(BUILD_DIR)/linux \
 		CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv \
-		$(BOARD)_defconfig
+		$(SOC)_$(BOARD)_defconfig
 	+$(MAKE) -C src/linux O=../../$(BUILD_DIR)/linux \
 		CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv
 
@@ -33,7 +34,7 @@ linux: FORCE
 .PHONY: FORCE
 
 FW_PAYLOAD = $(BUILD_DIR)/opensbi/platform/generic/firmware/fw_payload.bin
-DTB = $(BUILD_DIR)/$(BOARD).dtb
+DTB = $(BUILD_DIR)/$(SOC)-$(BOARD).dtb
 INITRD = $(BUILD_DIR)/initrd.img
 ROOTFS = $(BUILD_DIR)/rootfs.ext4
 
@@ -50,11 +51,11 @@ $(BUILD_DIR)/u-boot.bin: $(BUILD_DIR)/u-boot/u-boot.bin
 %.gz: %
 	gzip -fkn9 "$<"
 
-$(BUILD_DIR)/$(BOARD).dts.txt: linux
+$(BUILD_DIR)/$(SOC)-$(BOARD).dts.txt: linux
 	mkdir -p -- "$(BUILD_DIR)"
 	$(CPP) -nostdinc -I src/linux/include -I src/linux/arch \
 		-undef -x assembler-with-cpp \
-		src/linux/arch/riscv/boot/dts/kendryte/$(BOARD).dts \
+		src/linux/arch/riscv/boot/dts/kendryte/$(SOC)_$(BOARD).dts \
 		-o $@
 
 %.dtb: %.dts.txt linux
