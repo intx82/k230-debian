@@ -60,19 +60,15 @@ $(BUILD_DIR)/$(BOARD).dts.txt: linux
 %.dtb: %.dts.txt linux
 	$(BUILD_DIR)/linux/scripts/dtc/dtc -I dts -q -O dtb "$<" -o "$@"
 
-$(INITRD): Makefile
-	mkdir -p -- "$(BUILD_DIR)"
-	truncate --size=1 $@
-
 $(BUILD_DIR)/ug_u-boot.bin: $(BUILD_DIR)/u-boot/u-boot.bin.gz
 	$(BUILD_DIR)/u-boot/tools/mkimage -A riscv -C gzip \
 		-O u-boot -T firmware  -a 0 -e 0 -n uboot \
 		-d "$<" $@
 
-$(BUILD_DIR)/ulinux.bin: u-boot $(FW_PAYLOAD).gz $(INITRD) $(DTB)
+$(BUILD_DIR)/ulinux.bin: u-boot $(FW_PAYLOAD).gz $(DTB)
 	$(BUILD_DIR)/u-boot/tools/mkimage -A riscv -O linux -T multi -C gzip \
 		-a 0 -e 0 -n linux \
-		-d $(FW_PAYLOAD).gz:$(INITRD):$(DTB) $@
+		-d $(FW_PAYLOAD).gz:$(DTB) $@
 
 $(ROOTFS): Makefile
 	mkdir -p -- "$(BUILD_DIR)"
