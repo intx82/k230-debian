@@ -29,8 +29,6 @@ linux: FORCE
 	+$(MAKE) -C src/linux O=../../$(BUILD_DIR)/linux \
 		CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv
 
-#make ARCH=riscv O=$(LINUX_BUILD_DIR) modules_install INSTALL_MOD_PATH=$(LINUX_BUILD_DIR)/rootfs/ CROSS_COMPILE=$(CROSS_COMPILE)
-
 .PHONY: FORCE
 
 FW_PAYLOAD = $(BUILD_DIR)/opensbi/platform/generic/firmware/fw_payload.bin
@@ -71,11 +69,24 @@ $(BUILD_DIR)/ulinux.bin: u-boot $(FW_PAYLOAD).gz $(DTB)
 		-a 0 -e 0 -n linux \
 		-d $(FW_PAYLOAD).gz:$(DTB) $@
 
-$(ROOTFS): Makefile
-	mkdir -p -- "$(BUILD_DIR)"
-	rm -f -- "$@"
-	# -d rootfs
-	/sbin/mkfs.ext4 -r 1 -N 0 -m 1 -L rootfs "$@" 1M
+$(ROOTFS): Makefile $(BUILD_DIR)/ulinux.bin src/extlinux.conf
+	rm -rf -- "$@" "$@.tmp" "$(BUILD_DIR)/rootfs"
+	mkdir -p -- "$(BUILD_DIR)/rootfs/boot/"
+	#+fakeroot $(MAKE) -C src/linux O=../../$(BUILD_DIR)/linux \
+	#	ARCH=riscv CROSS_COMPILE=$(CROSS_COMPILE) \
+	#	INSTALL_PATH=$(BUILD_DIR)/rootfs/boot \
+	#	INSTALL_MOD_PATH=$(BUILD_DIR)/rootfs \
+	#	install modules_install
+	fakeroot install -o root -g root -m 0644 -D $(BUILD_DIR)/ulinux.bin \
+		"$(BUILD_DIR)/rootfs/boot/vmlinuz-5.10.4"
+	fakeroot install -o root -g root -m 0644 -D src/extlinux.conf \
+		"$(BUILD_DIR)/rootfs/boot/extlinux/extlinux.conf"
+	fakeroot install -o root -g root -m 0644 \
+		-D "$(BUILD_DIR)/$(SOC)-$(BOARD).dtb" \
+		"$(BUILD_DIR)/rootfs/boot/dtbs/$(SOC)-$(BOARD).dtb"
+	fakeroot /sbin/mkfs.ext4 -L rootfs -d "$(BUILD_DIR)/rootfs" \
+		"$@.tmp" 12M
+	mv -f -- "$@.tmp" "$@"
 
 $(BUILD_DIR)/fn_%: $(BUILD_DIR)/%
 	./make-k230-firmware -i "$<" -o "$@"
