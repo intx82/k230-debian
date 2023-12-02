@@ -68,7 +68,15 @@ $(BUILD_DIR)/ulinux.bin: $(FW_PAYLOAD).gz u-boot
 	$(BUILD_DIR)/u-boot/tools/mkimage -A riscv -C gzip \
 		-O linux -T kernel -a 0 -e 0 -n linux -d "$<" "$@"
 
-$(ROOTFS): Makefile $(BUILD_DIR)/ulinux.bin src/extlinux.conf $(DTB)
+$(BUILD_DIR)/%.o: src/%.s
+	mkdir -p -- "$(BUILD_DIR)"
+	$(CROSS_COMPILE)as -c -o "$@" "$<"
+
+$(BUILD_DIR)/init: $(BUILD_DIR)/init.o
+	$(CROSS_COMPILE)ld -static -nostdlib -o "$@" "$^"
+
+$(ROOTFS): Makefile $(BUILD_DIR)/ulinux.bin src/extlinux.conf $(DTB) \
+		$(BUILD_DIR)/init
 	rm -rf -- "$@" "$@.tmp" "$(BUILD_DIR)/rootfs"
 	mkdir -p -- "$(BUILD_DIR)/rootfs/boot/"
 	#+fakeroot $(MAKE) -C src/linux O=../../$(BUILD_DIR)/linux \
@@ -80,9 +88,11 @@ $(ROOTFS): Makefile $(BUILD_DIR)/ulinux.bin src/extlinux.conf $(DTB)
 		"$(BUILD_DIR)/rootfs/boot/vmlinuz-5.10.4"
 	fakeroot install -o root -g root -m 0644 -D src/extlinux.conf \
 		"$(BUILD_DIR)/rootfs/boot/extlinux/extlinux.conf"
-	fakeroot install -o root -g root -m 0644 \
-		-D "$(BUILD_DIR)/$(SOC)-$(BOARD).dtb" \
+	fakeroot install -o root -g root -m 0644 -D \
+		"$(BUILD_DIR)/$(SOC)-$(BOARD).dtb" \
 		"$(BUILD_DIR)/rootfs/boot/dtbs/$(SOC)-$(BOARD).dtb"
+	fakeroot install -o root -g root -m 0755 -D \
+		"$(BUILD_DIR)/init" "$(BUILD_DIR)/rootfs/sbin/init"
 	fakeroot /sbin/mkfs.ext4 -L rootfs -d "$(BUILD_DIR)/rootfs" \
 		"$@.tmp" 12M
 	mv -f -- "$@.tmp" "$@"
