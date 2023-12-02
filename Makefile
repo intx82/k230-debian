@@ -64,12 +64,11 @@ $(BUILD_DIR)/ug_u-boot.bin: $(BUILD_DIR)/u-boot/u-boot.bin.gz
 		-O u-boot -T firmware  -a 0 -e 0 -n uboot \
 		-d "$<" $@
 
-$(BUILD_DIR)/ulinux.bin: u-boot $(FW_PAYLOAD).gz $(DTB)
-	$(BUILD_DIR)/u-boot/tools/mkimage -A riscv -O linux -T multi -C gzip \
-		-a 0 -e 0 -n linux \
-		-d $(FW_PAYLOAD).gz:$(DTB) $@
+$(BUILD_DIR)/ulinux.bin: $(FW_PAYLOAD).gz u-boot
+	$(BUILD_DIR)/u-boot/tools/mkimage -A riscv -C gzip \
+		-O linux -T kernel -a 0 -e 0 -n linux -d "$<" "$@"
 
-$(ROOTFS): Makefile $(BUILD_DIR)/ulinux.bin src/extlinux.conf
+$(ROOTFS): Makefile $(BUILD_DIR)/ulinux.bin src/extlinux.conf $(DTB)
 	rm -rf -- "$@" "$@.tmp" "$(BUILD_DIR)/rootfs"
 	mkdir -p -- "$(BUILD_DIR)/rootfs/boot/"
 	#+fakeroot $(MAKE) -C src/linux O=../../$(BUILD_DIR)/linux \
