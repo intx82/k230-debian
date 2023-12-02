@@ -77,7 +77,7 @@ and accessing the serial console.
   * In the following example, we will assume it is called `/dev/sdz`.
 * Flash the system image `sysimage-sdcard.img` onto the SD card, e.g.:
 ```
-sudo dd if=sysimage-sdcard.img of=/dev/sdz bs=1M
+dd if=sysimage-sdcard.img of=/dev/sdz bs=1M
 sync
 ```
 * Open the SD card device node in a GPT partitioning tool such as `parted`:
@@ -133,8 +133,7 @@ To rebuild the system image yourself:
 * Clone this repository.
 * Install the GCC cross-compiler for Linux 64-bit RISC-V:
   `riscv64-linux-gnu-gcc`.
-* Install GNU/make, `xxd`, `gawk`, `sfdisk` (list may not be exhaustive).
-* Install Python3.
+* Install GNU/make, `xxd`, `gawk`, `sfdisk`, `fakeroot` and Python 3.
 * Run `make`.
 
 TODO: better documentation, maybe in a separate wiki page.
