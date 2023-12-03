@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: BSD-2-Clause
+# Copyright © 2023 Rémi Denis-Courmont
 	.text
 	.globl	_start
 
@@ -23,10 +25,9 @@ _start:
 	li	a0, 1 # fd = fileno(stdout)
 	lla	a1, message
 	lla	a2, message_end
+	lla	ra, pause
 	sub	a2, a2, a1
-	jal	write
-	auipc	ra, 0
-	j	pause
+	j	write
 
 message:
 	.ascii	"\n"
