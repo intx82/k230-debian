@@ -70,7 +70,7 @@ On other operating systems, you may need to use different tools for flashing
 and accessing the serial console.
 
 * Get a microSD card and a microSD card drive.
-* Download and decompress the system image, or rebuild it yourself (see below).
+* Download and decompress the system image, or [rebuild it](#Build).
 * Put the microSD card into the drive.
 * Check **carefully** the *correct* device node for the microSD card.
   * If you pick the wrong node, you may accidentally overwrite other data.
@@ -92,11 +92,6 @@ resize2fs /dev/sdz5
 * Format new partition as `ext4`.
 * Mount the root partition.
 * Install a Linux RISC-V distribution on the root partition:
-  * Refer to your distribution installation documentation for that part.
-  * Install an NTP client such as `ntpdate`.
-  * Install a network connection manager such as `network-manager`.
-  * Install the OpenSSH server (optional but recommended).
-  * Create a user account (if necessary).
 * Unmount the root partition.
 * Put the microSD card into the slot on the K230-CanMV board.
 * Power the board on.
@@ -121,10 +116,13 @@ want U-boot to use its default settings.
 The error is essentially harmless. But if you want to avoid it anyway,
 just save the current environment from the U-boot command line prompt.
 
-## Kernel panic due to no init
+## Ethernet interface not found
 
-This occurs if you flashed the image but did not install a Linux distribution.
-Please recheck the installation documentation.
+Initialisation of the RealTek 8152 USB Ethernet adapter fails pseudo-randomly.
+This is a [known issue affecting the vendor kernel](https://github.com/kendryte/k230_sdk/issues/35).
+
+Cold resetting the board can sometimes solve the problem,
+but this seems random.
 
 # Build
 
