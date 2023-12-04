@@ -107,7 +107,7 @@ sysimage-sdcard.img: \
 	dd bs=1K seek=1024 of=$@.tmp if=$(BUILD_DIR)/fn_u-boot-spl.bin
 	dd bs=1K seek=1536 of=$@.tmp if=$(BUILD_DIR)/fn_u-boot-spl.bin
 	dd bs=1K seek=2048 of=$@.tmp if=$(BUILD_DIR)/ug_u-boot.bin
-	dd bs=1K seek=4096 of=$@.tmp if=$(BUILD_DIR)/rootfs.ext4
+	dd bs=1K seek=3072 of=$@.tmp if=$(BUILD_DIR)/rootfs.ext4
 	truncate --size=+1M "$@.tmp" # GPT copy
 	/sbin/sfdisk "$@.tmp" < src/sdcard.dump
 	mv -- "$@.tmp" "$@"
