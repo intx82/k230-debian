@@ -135,4 +135,11 @@ $ cd k230-boot
 $ make
 ```
 
-TODO: better documentation, maybe in a separate wiki page.
+# Contact
+
+You can submit merge requests or issues on this project.
+If you need to get a new Gitlab account approved,
+contact the `#videolan` IRC channel on Libera chat.
+
+For technical discussions regarding this project,
+you can contact `courmisch` on the `#riscv` IRC channel also on Libera chat.
