@@ -62,37 +62,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # Installation
 
-**WARNING**: Make sure that you have backed up any data from the microSD card
-before you proceed. Existing data will be overwritten and permanently lost.
+**WARNINGS**:
+* Make sure that you have backed up any data from the microSD card.
+  Existing data will be overwritten and permanently lost.
+* Ascertain the correct device node for the microSD card whilst flashing.
+  If you use another device node, you may erase the data on your hard-drive
+  or whatever else.
 
-Note that we assume that you have a Linux or BSD desktop computer.
-On other operating systems, you may need to use different tools for flashing
-and accessing the serial console.
+The following instructions assume that you have a Linux (or BSD) desktop
+computer. Your mileage may vary if you use another operating system.
 
-* Get a microSD card and a microSD card drive.
 * Download and decompress the system image, or [rebuild it](#Build).
-* Put the microSD card into the drive.
-* Check **carefully** the *correct* device node for the microSD card.
-  * If you pick the wrong node, you may accidentally overwrite other data.
-  * In the following example, we will assume it is called `/dev/sdz`.
-* Flash the system image `sysimage-sdcard.img` onto the SD card, e.g.:
+* Flash the system image `sysimage-sdcard.img` onto a free microSD card.
+  For instance, if the SD card device node is `/dev/sdz`:
 ```
 # dd if=sysimage-sdcard.img of=/dev/sdz bs=1M conv=sync
 ```
-* Open the SD card device node in a GPT partitioning tool such as `parted`:
-  * Fix the Master Boot Record when asked (this is necessary because the
-    system image should have been smaller than the SD card capacity).
-  * Resize the "`rootfs`" (number 5) root partition.
-  * Save and exit.
-* Resize the `ext4` file system of the root partition, e.g.:
-```
-# resize2fs /dev/sdz5
-```
-* Mount the root partition.
+* Edit the partition table of microSD card with an ad-hoc tool,
+  such as GNU Parted to:
+  * extend the partition table to the entire SD card and
+  * resize the "`rootfs`" (number 5) root partition.
+* Resize the file system of the root partition.
 * Install a Linux RISC-V distribution on the root partition:
-* Unmount the root partition.
-* Put the microSD card into the slot on the K230-CanMV board.
-* Power the board on.
+  * [Debian GNU/Linux](https://www.remlab.net/op/k230-canmv-debian.shtml).
+* Put the microSD card into the TF slot of the K230-CanMV board and power on.
 
 # Troubleshooting
 
@@ -116,14 +109,12 @@ just save the current environment from the U-boot command line prompt.
 
 ## Ethernet interface reports no link (no carrier)
 
-This is a known problem wit the RealTek 8152 USB Ethernet adapter.
-
-To work around this, disable Ethernet auto-negotiation and force a speed
-of 10 MBits/s:
+There is a known issue with the RealTek 8152 USB Ethernet adapter,
+whereby it does not detect the link. To work around this, disable Ethernet
+auto-negotiation and force a link speed of 10 MBits/s, e.g.:
 ```
 # ethtool -s eth0 autoneg off speed 10 duplex full
 ```
-
 Note that [the vendor kernel is even worse off](https://github.com/kendryte/k230_sdk/issues/35).
 
 # Build
