@@ -77,8 +77,7 @@ and accessing the serial console.
   * In the following example, we will assume it is called `/dev/sdz`.
 * Flash the system image `sysimage-sdcard.img` onto the SD card, e.g.:
 ```
-dd if=sysimage-sdcard.img of=/dev/sdz bs=1M
-sync
+# dd if=sysimage-sdcard.img of=/dev/sdz bs=1M conv=sync
 ```
 * Open the SD card device node in a GPT partitioning tool such as `parted`:
   * Fix the Master Boot Record when asked (this is necessary because the
@@ -87,9 +86,8 @@ sync
   * Save and exit.
 * Resize the `ext4` file system of the root partition, e.g.:
 ```
-resize2fs /dev/sdz5
+# resize2fs /dev/sdz5
 ```
-* Format new partition as `ext4`.
 * Mount the root partition.
 * Install a Linux RISC-V distribution on the root partition:
 * Unmount the root partition.
@@ -104,7 +102,7 @@ on the power USB-C port.
 To troubleshoot, connect the board with the provided USB cable to a free port
 on a Linux desktop, and attach to the serial port, e.g.:
 ```
-# cu -l ttyACM0
+$ cu -l ttyACM0
 ```
 
 ## U-boot enviroment CRC errors
@@ -116,13 +114,17 @@ want U-boot to use its default settings.
 The error is essentially harmless. But if you want to avoid it anyway,
 just save the current environment from the U-boot command line prompt.
 
-## Ethernet interface not found
+## Ethernet interface reports no link (no carrier)
 
-Initialisation of the RealTek 8152 USB Ethernet adapter fails pseudo-randomly.
-This is a [known issue affecting the vendor kernel](https://github.com/kendryte/k230_sdk/issues/35).
+This is a known problem wit the RealTek 8152 USB Ethernet adapter.
 
-Cold resetting the board can sometimes solve the problem,
-but this seems random.
+To work around this, disable Ethernet auto-negotiation and force a speed
+of 10 MBits/s:
+```
+# ethtool -s eth0 autoneg off speed 10 duplex full
+```
+
+Note that [the vendor kernel is even worse off](https://github.com/kendryte/k230_sdk/issues/35).
 
 # Build
 
@@ -131,15 +133,15 @@ To rebuild the system image yourself:
 * Install the `riscv64-linux-gnu-gcc`, GNU/make, `xxd`, `gawk`, `sfdisk`,
   `fakeroot` and Python 3, e.g.:
 ```
-sudo apt-get install install gcc-riscv64-linux-gnu make xxd gawk fdisk \
+# apt-get install install gcc-riscv64-linux-gnu make xxd gawk fdisk \
                              fakeroot python3
 ```
 * Clone this repository and rebuild:
 ```
-git clone --recurse-submodules \
+$ git clone --recurse-submodules \
 	https://code.videolan.org/Courmisch/k230-boot.git
-cd k230-boot
-make
+$ cd k230-boot
+$ make
 ```
 
 TODO: better documentation, maybe in a separate wiki page.
