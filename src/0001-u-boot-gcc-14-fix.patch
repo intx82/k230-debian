@@ -1,0 +1,40 @@
+From e18e901d08a3e46ee43b223b67237d08c7fa67c8 Mon Sep 17 00:00:00 2001
+From: Danil Ruban <intx82@gmail.com>
+Date: Tue, 3 Dec 2024 16:05:15 +0100
+Subject: [PATCH] gcc-14 fix
+
+---
+ arch/riscv/cpu/k230/cpu.c | 3 +++
+ config.mk                 | 2 +-
+ 2 files changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/arch/riscv/cpu/k230/cpu.c b/arch/riscv/cpu/k230/cpu.c
+index dcc9ebf95e..1ec8ef2bd8 100755
+--- a/arch/riscv/cpu/k230/cpu.c
++++ b/arch/riscv/cpu/k230/cpu.c
+@@ -36,6 +36,9 @@
+ #include <linux/delay.h>
+ #include "platform.h"
+ 
++void record_boot_time_info_to_sram(char *prompt);
++
++
+ static inline void improving_cpu_performance(void)
+ {
+ 	/* Set cpu regs */
+diff --git a/config.mk b/config.mk
+index b915c29b3f..ab55647e1d 100644
+--- a/config.mk
++++ b/config.mk
+@@ -11,7 +11,7 @@
+ #  That's the reason why this file must be included from spl/Makefile too.
+ #  If we did not have Tegra SoCs, build system would be much simpler...)
+ PLATFORM_RELFLAGS :=
+-PLATFORM_CPPFLAGS :=
++PLATFORM_CPPFLAGS := -Wno-implicit-function-declaration -Wno-int-conversion
+ LDFLAGS_FINAL :=
+ LDFLAGS_STANDALONE :=
+ OBJCOPYFLAGS :=
+-- 
+2.30.2
+

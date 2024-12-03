@@ -1,4 +1,4 @@
-CROSS_COMPILE ?= riscv64-linux-gnu-
+CROSS_COMPILE ?= riscv64-unknown-linux-gnu-
 SOC = k230
 BOARD ?= canmv
 BUILD_DIR ?= output
@@ -10,7 +10,7 @@ all: sysimage-sdcard.img
 
 u-boot: FORCE
 	+$(MAKE) -C src/u-boot O=../../$(BUILD_DIR)/u-boot \
-		ARCH=riscv CROSS_COMPILE="$(CROSS_COMPILE)" \
+		ARCH=riscv CROSS_COMPILE="$(CROSS_COMPILE)" KCFLAGS=-Wno-int-conversion \
 		$(SOC)_$(BOARD)_defconfig
 	+$(MAKE) -C src/u-boot O=../../$(BUILD_DIR)/u-boot \
 		ARCH=riscv CROSS_COMPILE="$(CROSS_COMPILE)"
