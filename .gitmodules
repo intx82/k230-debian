@@ -8,5 +8,7 @@
 	branch = k230
 [submodule "src/linux"]
 	path = src/linux
-	url = https://code.videolan.org/Courmisch/linux.git
-	branch = k230
+	url = git@github.com:intx82/linux-xuantie-kernel.git
+[submodule "src/bcmdhd"]
+	path = src/bcmdhd
+	url = git@github.com:intx82/broadcom-bcmdhd-4359.git

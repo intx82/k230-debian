@@ -23,9 +23,9 @@ opensbi: linux
 		FW_PAYLOAD_PATH="$(shell pwd)/$(BUILD_DIR)/linux/arch/riscv/boot/Image"
 
 linux: FORCE
-	+$(MAKE) -C src/linux O=../../$(BUILD_DIR)/linux \
+	+$(MAKE) -j4 -C src/linux O=../../$(BUILD_DIR)/linux \
 		CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv \
-		$(SOC)_$(BOARD)_defconfig
+		$(SOC)_defconfig
 	+$(MAKE) -C src/linux O=../../$(BUILD_DIR)/linux \
 		CROSS_COMPILE=$(CROSS_COMPILE) ARCH=riscv
 
@@ -53,7 +53,7 @@ $(BUILD_DIR)/$(SOC)-$(BOARD).dts.txt: linux
 	mkdir -p -- "$(BUILD_DIR)"
 	$(CPP) -nostdinc -I src/linux/include -I src/linux/arch \
 		-undef -x assembler-with-cpp \
-		src/linux/arch/riscv/boot/dts/kendryte/$(SOC)_$(BOARD).dts \
+		src/linux/arch/riscv/boot/dts/canaan/$(SOC)-$(BOARD).dts \
 		-o $@
 
 %.dtb: %.dts.txt linux
@@ -85,7 +85,7 @@ $(ROOTFS): Makefile $(BUILD_DIR)/ulinux.bin src/extlinux.conf $(DTB) \
 	#	INSTALL_MOD_PATH=$(BUILD_DIR)/rootfs \
 	#	install modules_install
 	fakeroot install -o root -g root -m 0644 -D $(BUILD_DIR)/ulinux.bin \
-		"$(BUILD_DIR)/rootfs/boot/vmlinuz-5.10.4"
+		"$(BUILD_DIR)/rootfs/boot/vmlinuz-6.6.36"
 	fakeroot install -o root -g root -m 0644 -D src/extlinux.conf \
 		"$(BUILD_DIR)/rootfs/boot/extlinux/extlinux.conf"
 	fakeroot install -o root -g root -m 0644 -D \
@@ -94,7 +94,7 @@ $(ROOTFS): Makefile $(BUILD_DIR)/ulinux.bin src/extlinux.conf $(DTB) \
 	fakeroot install -o root -g root -m 0755 -D \
 		"$(BUILD_DIR)/init" "$(BUILD_DIR)/rootfs/sbin/init"
 	fakeroot /sbin/mkfs.ext4 -L rootfs -d "$(BUILD_DIR)/rootfs" \
-		"$@.tmp" 10M
+		"$@.tmp" 512M
 	mv -f -- "$@.tmp" "$@"
 
 $(BUILD_DIR)/fn_%: $(BUILD_DIR)/%
